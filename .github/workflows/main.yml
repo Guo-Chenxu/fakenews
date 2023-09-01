@@ -13,11 +13,11 @@ jobs:
       uses: actions/checkout@master
 
     - name: 设置JDK
-        uses: actions/setup-java@v3.12.0
-        with:
-          distribution: 'temurin'
-          java-version: '8'
-          cache: 'maven'
+      uses: actions/setup-java@v3.12.0
+      with:
+        distribution: 'temurin'
+        java-version: '8'
+        cache: 'maven'
 
     - name: 项目打包
-        run: mvn -B package
+      run: mvn -B package

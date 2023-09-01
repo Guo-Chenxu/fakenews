@@ -1,4 +1,4 @@
-package com.guochenxu.model.common.dtos;
+package com.guochenxu.model.common.dto;
 
 import com.alibaba.fastjson.JSON;
 import com.guochenxu.model.common.enums.AppHttpCodeEnum;

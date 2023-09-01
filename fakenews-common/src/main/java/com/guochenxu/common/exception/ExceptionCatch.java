@@ -1,7 +1,7 @@
 package com.guochenxu.common.exception;
 
 
-import com.guochenxu.model.common.dtos.ResponseResult;
+import com.guochenxu.model.common.dto.ResponseResult;
 import com.guochenxu.model.common.enums.AppHttpCodeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;

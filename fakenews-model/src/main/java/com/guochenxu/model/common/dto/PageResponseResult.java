@@ -1,4 +1,4 @@
-package com.guochenxu.model.common.dtos;
+package com.guochenxu.model.common.dto;
 
 import java.io.Serializable;
 

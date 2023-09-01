@@ -1,4 +1,4 @@
-package com.guochenxu.model.common.dtos;
+package com.guochenxu.model.common.dto;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,7 @@ server:
   port: 21300
 spring:
   application:
-    name: fakenews-user
+    name: fakenews-app-gateway
   cloud:
     nacos:
       discovery:

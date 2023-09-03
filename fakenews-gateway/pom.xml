@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>fakenews-app-gateway</module>
+        <module>fakenews-wemedia-gateway</module>
     </modules>
     <modelVersion>4.0.0</modelVersion>
 

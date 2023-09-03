@@ -10,6 +10,8 @@
     <packaging>pom</packaging>
     <modules>
         <module>fakenews-user</module>
+        <module>fakenews-article</module>
+        <module>fakenews-wemedia</module>
     </modules>
     <modelVersion>4.0.0</modelVersion>
 

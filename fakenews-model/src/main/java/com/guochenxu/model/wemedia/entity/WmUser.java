@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,6 +16,8 @@ import java.util.Date;
  */
 @Data
 @TableName("wm_user")
+@AllArgsConstructor
+@NoArgsConstructor
 public class WmUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -114,4 +118,7 @@ public class WmUser implements Serializable {
     @TableField("created_time")
     private Date createdTime;
 
+    public WmUser(Integer id) {
+        this.id = id;
+    }
 }

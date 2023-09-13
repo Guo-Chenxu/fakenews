@@ -1,9 +1,14 @@
 package com.guochenxu.wemedia.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guochenxu.file.service.FileStorageService;
+import com.guochenxu.model.common.dto.PageResponseResult;
 import com.guochenxu.model.common.dto.ResponseResult;
 import com.guochenxu.model.common.enums.AppHttpCodeEnum;
+import com.guochenxu.model.wemedia.dto.WmMaterialDto;
 import com.guochenxu.model.wemedia.entity.WmMaterial;
 import com.guochenxu.utils.thread.WmThreadLocalUtil;
 import com.guochenxu.wemedia.mapper.WmMaterialMapper;
@@ -46,5 +51,26 @@ public class WmMaterialServiceImpl extends ServiceImpl<WmMaterialMapper, WmMater
         this.save(material);
 
         return ResponseResult.okResult(material);
+    }
+
+    @Override
+    public ResponseResult findList(WmMaterialDto dto) {
+        if (dto == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PARAM_INVALID);
+        }
+        dto.checkParam();
+
+        IPage page = new Page(dto.getPage(), dto.getSize());
+        LambdaQueryWrapper<WmMaterial> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (dto.getIsCollection() != null && dto.getIsCollection() == 1) {
+            lambdaQueryWrapper.eq(WmMaterial::getIsCollection, dto.getIsCollection());
+        }
+        lambdaQueryWrapper.eq(WmMaterial::getUserId, WmThreadLocalUtil.getUser().getId());
+        lambdaQueryWrapper.orderByDesc(WmMaterial::getCreatedTime);
+        page = this.page(page, lambdaQueryWrapper);
+
+        PageResponseResult pageResponseResult = new PageResponseResult(dto.getPage(), dto.getSize(), (int) page.getTotal());
+        pageResponseResult.setData(page.getRecords());
+        return ResponseResult.okResult(pageResponseResult);
     }
 }

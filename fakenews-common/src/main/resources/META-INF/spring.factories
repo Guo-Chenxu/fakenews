@@ -1,2 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.guochenxu.common.exception.ExceptionCatch
+  com.guochenxu.common.exception.ExceptionCatch\
+  com.guochenxu.common.aliyun.GreenImageScan\
+  com.guochenxu.common.aliyun.GreenTextScan

@@ -1,6 +1,7 @@
 package com.guochenxu.wemedia.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.guochenxu.apis.article.IArticleClient;
 import com.guochenxu.common.aliyun.GreenImageScan;
 import com.guochenxu.common.aliyun.GreenTextScan;
@@ -9,9 +10,12 @@ import com.guochenxu.model.article.dto.ArticleDto;
 import com.guochenxu.model.common.dto.ResponseResult;
 import com.guochenxu.model.wemedia.entity.WmChannel;
 import com.guochenxu.model.wemedia.entity.WmNews;
+import com.guochenxu.model.wemedia.entity.WmSensitive;
 import com.guochenxu.model.wemedia.entity.WmUser;
+import com.guochenxu.utils.common.SensitiveWordUtil;
 import com.guochenxu.wemedia.mapper.WmChannelMapper;
 import com.guochenxu.wemedia.mapper.WmNewsMapper;
+import com.guochenxu.wemedia.mapper.WmSensitiveMapper;
 import com.guochenxu.wemedia.mapper.WmUserMapper;
 import com.guochenxu.wemedia.service.WmNewsAutoScanService;
 import com.netflix.ribbon.proxy.annotation.ContentTransformerClass;
@@ -62,6 +66,9 @@ public class WmNewsAutoScanServiceImpl implements WmNewsAutoScanService {
     @Resource
     private WmChannelMapper wmChannelMapper;
 
+    @Resource
+    private WmSensitiveMapper wmSensitiveMapper;
+
     @Override
     @Transactional
     // 异步调用
@@ -76,6 +83,10 @@ public class WmNewsAutoScanServiceImpl implements WmNewsAutoScanService {
         if (wmNews.getStatus().equals(WmNews.Status.SUBMIT.getCode())) {
             //从内容中提取纯文本内容和图片
             Map<String, Object> textAndImages = handleTextAndImages(wmNews);
+
+            // 自定义敏感词审核
+            boolean isSensitive = handleSensitiveScan((String) textAndImages.get("content"), wmNews);
+            if (!isSensitive) return;
 
             //2.审核文本内容  阿里云接口
             boolean isTextScan = handleTextScan((String) textAndImages.get("content"), wmNews);
@@ -133,6 +144,34 @@ public class WmNewsAutoScanServiceImpl implements WmNewsAutoScanService {
             throw new RuntimeException(e);
         }
         return responseResult;
+    }
+
+    /**
+     * 自管理的敏感词审核
+     *
+     * @param content
+     * @param wmNews
+     * @return
+     */
+    private boolean handleSensitiveScan(String content, WmNews wmNews) {
+
+        boolean flag = true;
+
+        //获取所有的敏感词
+        List<WmSensitive> wmSensitives = wmSensitiveMapper.selectList(Wrappers.<WmSensitive>lambdaQuery().select(WmSensitive::getSensitives));
+        List<String> sensitiveList = wmSensitives.stream().map(WmSensitive::getSensitives).collect(Collectors.toList());
+
+        //初始化敏感词库
+        SensitiveWordUtil.initMap(sensitiveList);
+
+        //查看文章中是否包含敏感词
+        Map<String, Integer> map = SensitiveWordUtil.matchWords(content);
+        if (map.size() > 0) {
+            updateWmNews(wmNews, (short) 2, "当前文章中存在违规内容" + map);
+            flag = false;
+        }
+
+        return flag;
     }
 
     /**

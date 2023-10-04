@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.guochenxu.common.constants.WemediaConstants;
+import com.guochenxu.common.constants.WmNewsMessageConstants;
 import com.guochenxu.common.exception.CustomException;
 import com.guochenxu.model.common.dto.PageResponseResult;
 import com.guochenxu.model.common.dto.ResponseResult;
@@ -28,15 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,6 +55,9 @@ public class WmNewsServiceImpl extends ServiceImpl<WmNewsMapper, WmNews> impleme
 
     @Resource
     private WmNewsTaskService wmNewsTaskService;
+
+    @Resource
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
     public ResponseResult findAll(WmNewsPageReqDto dto) {
@@ -283,5 +286,37 @@ public class WmNewsServiceImpl extends ServiceImpl<WmNewsMapper, WmNews> impleme
             updateById(wmNews);
         }
 
+    }
+
+    public ResponseResult downOrUp(@RequestBody WmNewsDto dto) {
+        //1.检查参数
+        if (dto.getId() == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PARAM_INVALID);
+        }
+
+        //2.查询文章
+        WmNews wmNews = getById(dto.getId());
+        if (wmNews == null) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.DATA_NOT_EXIST, "文章不存在");
+        }
+
+        //3.判断文章是否已发布
+        if (!wmNews.getStatus().equals(WmNews.Status.PUBLISHED.getCode())) {
+            return ResponseResult.errorResult(AppHttpCodeEnum.PARAM_INVALID, "当前文章不是发布状态，不能上下架");
+        }
+
+        //4.修改文章enable
+        if (dto.getEnable() != null && dto.getEnable() > -1 && dto.getEnable() < 2) {
+            update(Wrappers.<WmNews>lambdaUpdate().set(WmNews::getEnable, dto.getEnable())
+                    .eq(WmNews::getId, wmNews.getId()));
+
+            if (wmNews.getArticleId() != null) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("articleId", wmNews.getArticleId());
+                map.put("enable", dto.getEnable());
+                kafkaTemplate.send(WmNewsMessageConstants.WM_NEWS_UP_OR_DOWN_TOPIC, JSON.toJSONString(map));
+            }
+        }
+        return ResponseResult.okResult(AppHttpCodeEnum.SUCCESS);
     }
 }

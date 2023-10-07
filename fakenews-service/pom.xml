@@ -13,6 +13,7 @@
         <module>fakenews-article</module>
         <module>fakenews-wemedia</module>
         <module>fakenews-schedule</module>
+        <module>fakenews-search</module>
     </modules>
     <modelVersion>4.0.0</modelVersion>
 

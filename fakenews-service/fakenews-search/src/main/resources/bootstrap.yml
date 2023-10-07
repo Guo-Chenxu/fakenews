@@ -1,0 +1,14 @@
+server:
+  port: 21305
+spring:
+  application:
+    name: fakenews-search
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: ec9bd4cb-ce6b-4aac-9818-7f08679e1b7c
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+        namespace: ec9bd4cb-ce6b-4aac-9818-7f08679e1b7c

@@ -5,7 +5,10 @@ import com.alibaba.fastjson.JSON;
 import com.guochenxu.model.common.dto.ResponseResult;
 import com.guochenxu.model.common.enums.AppHttpCodeEnum;
 import com.guochenxu.model.search.dto.UserSearchDto;
+import com.guochenxu.model.user.entity.ApUser;
+import com.guochenxu.search.service.ApUserSearchService;
 import com.guochenxu.search.service.ArticleSearchService;
+import com.guochenxu.utils.thread.AppThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
@@ -21,6 +24,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +36,9 @@ public class ArticleSearchServiceImpl implements ArticleSearchService {
 
     @Autowired
     private RestHighLevelClient restHighLevelClient;
+
+    @Resource
+    private ApUserSearchService apUserSearchService;
 
     /**
      * es文章分页检索
@@ -45,6 +52,13 @@ public class ArticleSearchServiceImpl implements ArticleSearchService {
         //1.检查参数
         if (dto == null || StringUtils.isBlank(dto.getSearchWords())) {
             return ResponseResult.errorResult(AppHttpCodeEnum.PARAM_INVALID);
+        }
+
+        ApUser user = AppThreadLocalUtil.getUser();
+
+        //异步调用 保存搜索记录
+        if(user != null && dto.getFromIndex() == 0){
+            apUserSearchService.insert(dto.getSearchWords(), user.getId());
         }
 
         //2.设置查询条件
